@@ -54,10 +54,8 @@ func main() {
 		log.Fatal(errors.New("admin username not exist"))
 	}
 
-	audioLink, exists := os.LookupEnv("AUDIO_LINK")
-
 	opts := []bot.Option{
-		bot.WithDefaultHandler(messageHandler(files.New(storagePath), int64(groupID), adminPass, adminID, audioLink)),
+		bot.WithDefaultHandler(messageHandler(files.New(storagePath), int64(groupID), adminPass, adminID)),
 	}
 
 	b, err := bot.New(token, opts...)
@@ -69,7 +67,7 @@ func main() {
 	b.Start(ctx)
 }
 
-func messageHandler(data files.Storage, groupID int64, adminPass string, adminID string, audioLink string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+func messageHandler(data files.Storage, groupID int64, adminPass string, adminID string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 		if update.Message == nil {
 			return
@@ -102,7 +100,7 @@ func messageHandler(data files.Storage, groupID int64, adminPass string, adminID
 							}
 
 							msg := strings.Join(words[2:], " ")
-							sendTextMessage(ctx, b, ud.ChatID, msg+"\n\n(c) Модератор")
+							sendTextMessage(ctx, b, ud.ChatID, msg+"\n\n(c) Большой брат")
 						}
 					}
 				}
@@ -127,12 +125,12 @@ func messageHandler(data files.Storage, groupID int64, adminPass string, adminID
 				CurrentLevel: 0,
 				Mode:         storage.User,
 			}
-			data.Save(ud)
 		}
 
 		switch update.Message.Text {
 		case storage.START:
 			if !exists {
+				data.Save(ud)
 				sendTextMessage(ctx, b, chatID, storage.HELLO+"\n\nПривет, @"+ud.UserName+"!")
 				sendTextMessage(ctx, b, ud.ChatID, storage.FIRST_QUESTION)
 			}
@@ -199,35 +197,59 @@ func messageHandler(data files.Storage, groupID int64, adminPass string, adminID
 				if strings.EqualFold(update.Message.Text, "ПИВО!") {
 					ud.CurrentLevel += 1
 					sendTextMessage(ctx, b, chatID, storage.FOURTH_QUESTION)
-					sendAudioMessage(ctx, b, chatID, audioLink)
+					sendAudioMessage(ctx, b, chatID, storage.VOICE_LINK)
 				} else {
 					sendTextMessage(ctx, b, chatID, "Пупупу, это не похоже на ответ!\nЖду текстовое сообщение...")
 				}
 
 			case 3:
-				if strings.EqualFold(update.Message.Text, "Катя") {
+				if strings.EqualFold(update.Message.Text, "Настя") { //////////////////??????????????????????????
 					ud.CurrentLevel += 1
+					sendTextMessage(ctx, b, chatID, `Принято! Молодец!`)
 					sendTextMessage(ctx, b, chatID, storage.FIFTH_QUESTION)
 				} else {
 					sendTextMessage(ctx, b, chatID, "Пупупу, это не похоже на ответ!\nЖду текстовое сообщение с именем шпиона...")
 				}
 
 			case 4:
-				if strings.EqualFold(update.Message.Text, "Катя") {
+				if update.Message.Video != nil || update.Message.VideoNote != nil {
+					if update.Message.Video != nil {
+						msg := fmt.Sprintf("Автор: @%s (#%s)\n#Задание%d\n\n%s", ud.UserName, ud.UserName, ud.CurrentLevel+1, update.Message.Text)
+						sendVideo(ctx, b, groupID, update.Message.Video.FileID, msg)
+					} else if update.Message.VideoNote != nil {
+						sendVideoNote(ctx, b, groupID, update.Message.VideoNote.FileID)
+						msg := fmt.Sprintf("Автор: @%s (#%s)\n#Задание%d\n\n%s", ud.UserName, ud.UserName, ud.CurrentLevel+1, update.Message.Text)
+						sendTextMessage(ctx, b, groupID, msg)
+					}
+
 					ud.CurrentLevel += 1
+					sendTextMessage(ctx, b, chatID, "Какие же вы красивые😍😍😍\n\nПринято!")
 					sendTextMessage(ctx, b, chatID, storage.SIXTH_QUESTION)
 				} else {
-					sendTextMessage(ctx, b, chatID, "Пупупу, это не похоже на ответ!\nЖду текстовое сообщение с именем шпиона...")
+					sendTextMessage(ctx, b, chatID, "Пупупу, это не похоже на ответ!\nЖду видео/кружок...")
 				}
 
 			case 5:
-				if strings.EqualFold(update.Message.Text, "Катя") {
+				if strings.EqualFold(update.Message.Text, "Подумаю об этом завтра") {
 					ud.CurrentLevel += 1
-					sendTextMessage(ctx, b, chatID, storage.FIFTH_QUESTION)
+					sendTextMessage(ctx, b, chatID, storage.SEVENTH_QUESTION)
 				} else {
-					sendTextMessage(ctx, b, chatID, "Пупупу, это не похоже на ответ!\nЖду текстовое сообщение с именем шпиона...")
+					sendTextMessage(ctx, b, chatID, "Пупупу, это не похоже на ответ!\nЖду текстовое сообщение с паролем от шпиона...")
 				}
 
+			case 6:
+				if update.Message.Text != "" {
+					sendTextMessage(ctx, b, chatID, `Принято! Так держать!`)
+					msg := fmt.Sprintf("Автор: @%s (#%s)\n#Задание%d\n\n%s", ud.UserName, ud.UserName, ud.CurrentLevel+1, update.Message.Text)
+					sendTextMessage(ctx, b, groupID, msg)
+					ud.CurrentLevel += 1
+					sendTextMessage(ctx, b, chatID, storage.QUESTION_TIME)
+				} else {
+					sendTextMessage(ctx, b, chatID, "Пупупу, это не похоже на историю!\nЖду текстовое сообщение...")
+				}
+
+			case 7:
+				sendTextMessage(ctx, b, chatID, storage.QUESTION_TIME)
 			}
 
 		}
@@ -266,6 +288,21 @@ func sendAudioMessage(ctx context.Context, b *bot.Bot, chatID int64, voiceLink s
 	b.SendVoice(ctx, &bot.SendVoiceParams{
 		ChatID: chatID,
 		Voice:  &models.InputFileString{Data: voiceLink},
+	})
+}
+
+func sendVideoNote(ctx context.Context, b *bot.Bot, chatID int64, videoNoteLink string) {
+	b.SendVideoNote(ctx, &bot.SendVideoNoteParams{
+		ChatID:    chatID,
+		VideoNote: &models.InputFileString{Data: videoNoteLink},
+	})
+}
+
+func sendVideo(ctx context.Context, b *bot.Bot, chatID int64, videoLink string, msg string) {
+	b.SendVideo(ctx, &bot.SendVideoParams{
+		ChatID:  chatID,
+		Video:   &models.InputFileString{Data: videoLink},
+		Caption: msg,
 	})
 }
 
