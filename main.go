@@ -94,7 +94,7 @@ func messageHandler(data files.Storage, groupID int64, adminPass string, adminID
 						} else {
 							ud, _, err := data.LoadData(username)
 							if err != nil {
-								msg := fmt.Sprintf("can't load data: [%s]: ", username)
+								msg := fmt.Sprintf("can't load data: [%s]: ", words[1])
 								log.Print(e.Wrap(msg, err))
 								return
 							}
