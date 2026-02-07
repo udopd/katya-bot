@@ -203,7 +203,7 @@ func messageHandler(data files.Storage, groupID int64, adminPass string, adminID
 				}
 
 			case 3:
-				if strings.EqualFold(update.Message.Text, "Настя") { //////////////////??????????????????????????
+				if strings.EqualFold(update.Message.Text, "Настя") || strings.EqualFold(update.Message.Text, "Анастасия") || strings.EqualFold(update.Message.Text, "Настенька") { //////////////////??????????????????????????
 					ud.CurrentLevel += 1
 					sendTextMessage(ctx, b, chatID, `Принято! Молодец!`)
 					sendTextMessage(ctx, b, chatID, storage.FIFTH_QUESTION)

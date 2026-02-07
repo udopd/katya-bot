@@ -29,7 +29,7 @@ const REBUS_LINK = `AgACAgIAAxkBAAIFTWmGXg4Bzyr2R3uL0GXmurJW-kJ_AAJzDmsbDrg5SEBP
 const FOURTH_QUESTION = `4️⃣ ЗАДАНИЕ
 Вычисли ШПИОНА! Определи кому из гостей принадлежит следующее голосовое🎤
 Напиши его имя`
-const VOICE_LINK = `AwACAgIAAxkBAAIFgGmG9pNZ8f6h14CLq7DAyBJL7kN5AALEkAACDrg5SLLldId3FMB1OgQ`
+const VOICE_LINK = `AwACAgIAAxkBAAIF4WmHKAgYQN6tO6olMJsp3Qv_UHBtAAJtiwACDrhBSMZI3uzVt8r0OgQ`
 
 const FIFTH_QUESTION = `5️⃣ ЗАДАНИЕ
 Скинь видео с именниницей, где вы вдвоем! Можно прислать как архивный видос, так и свежий.
